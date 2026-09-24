@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Atendimento Eletrokit</title>
+  <meta name="theme-color" content="#0b2d5c">
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f5f7fa;
+      color: #0b2d5c;
+    }
+    .card {
+      width: min(92%, 440px);
+      background: #fff;
+      border-radius: 18px;
+      padding: 32px 24px;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(0,0,0,.10);
+    }
+    h1 { margin: 0 0 10px; font-size: 26px; }
+    p { margin: 0; line-height: 1.5; color: #4d5d70; }
+    .loader {
+      width: 38px;
+      height: 38px;
+      margin: 24px auto 0;
+      border: 4px solid #e6eaf0;
+      border-top-color: #f5c400;
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <h1>Eletrokit</h1>
+    <p>Estamos direcionando você para uma de nossas vendedoras...</p>
+    <div class="loader" aria-hidden="true"></div>
+  </main>
+
+  <script>
+    // Distribuição temporária: Simone + Letícia + Marcela
+    const vendedores = [
+      { nome: "Simone",  telefone: "5527998080133" },
+      { nome: "Letícia", telefone: "5527999632509" },
+      { nome: "Marcela", telefone: "5527997946582" }
+    ];
+
+    const STICKY_MS = 72 * 60 * 60 * 1000; // 72 horas
+    const STORAGE_KEY = "eletrokit_vendedora_v2";
+
+    function escolherVendedora() {
+      try {
+        const salvo = JSON.parse(localStorage.getItem(STORAGE_KEY));
+
+        if (salvo && salvo.telefone && salvo.expira > Date.now()) {
+          const aindaExiste = vendedores.find(v => v.telefone === salvo.telefone);
+          if (aindaExiste) return aindaExiste;
+        }
+
+        const escolhida = vendedores[Math.floor(Math.random() * vendedores.length)];
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({
+          telefone: escolhida.telefone,
+          expira: Date.now() + STICKY_MS
+        }));
+        return escolhida;
+      } catch (e) {
+        return vendedores[Math.floor(Math.random() * vendedores.length)];
+      }
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const oferta = (params.get("oferta") || "").trim();
+
+    const vendedora = escolherVendedora();
+
+    const mensagem = oferta
+      ? `Oi! Vim pelo Grupo VIP Eletrokit e tenho interesse nesta oferta: ${oferta}`
+      : "Oi! Vim pelo atendimento da Eletrokit e gostaria de falar com uma vendedora.";
+
+    const whatsapp = `https://wa.me/${vendedora.telefone}?text=${encodeURIComponent(mensagem)}`;
+
+    // Pequena pausa para a tela não parecer um erro de carregamento.
+    setTimeout(() => {
+      window.location.replace(whatsapp);
+    }, 650);
+  </script>
+</body>
+</html>
